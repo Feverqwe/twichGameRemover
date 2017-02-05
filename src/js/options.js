@@ -24,7 +24,6 @@ chrome.storage.sync.get({
 
     var selectNode = document.querySelector('.' + type + '__select');
 
-    var inputNode = document.querySelector('.' + type + '__input');
     var addBtnNode = document.querySelector('.' + type + '__add');
     addBtnNode.addEventListener('click', function (e) {
       e.preventDefault();
@@ -35,6 +34,13 @@ chrome.storage.sync.get({
         inputNode.value = '';
         loadList(type);
       });
+    });
+
+    var inputNode = document.querySelector('.' + type + '__input');
+    inputNode.addEventListener('keypress', function (e) {
+      if (e.keyCode === 13) {
+        addBtnNode.dispatchEvent(new MouseEvent('click', {cancelable: true}));
+      }
     });
 
     var removeBtnNode = document.querySelector('.' + type + '__remove');
