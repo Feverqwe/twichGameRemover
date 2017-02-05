@@ -64,19 +64,23 @@ chrome.storage.sync.get({
     style.textContent += getStyle('.tgr_hidden', {
       display: 'none'
     });
-    style.textContent += getStyle('.tgr_transparent', {
+    style.textContent += getStyle('.tgr_transparent .thumb', {
       opacity: .5,
       transition: 'opacity 0.3s'
     });
-    style.textContent += getStyle('.tgr_transparent:hover', {
+    style.textContent += getStyle('.tgr_transparent .thumb:hover', {
       opacity: 1
     });
     document.body.appendChild(style);
   };
 
   var onAddedNode = function (nodeList) {
+    var matched = [];
     for (var i = 0, node; node = nodeList[i]; i++) {
-      testBoxArt(node);
+      if (matched.indexOf(node) === -1) {
+        matched.push(node);
+        testBoxArt(node);
+      }
     }
   };
 
