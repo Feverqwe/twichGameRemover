@@ -49,7 +49,11 @@ chrome.storage.sync.get({
       var channelName = streamPreview.querySelector('.js-channel-link');
       channelName = channelName && channelName.textContent.trim();
       if (gameList.indexOf(gameName) !== -1 || channelList.indexOf(channelName) !== -1) {
-        streamPreview.classList.add('tgr_hidden');
+        if (storage.removeItems) {
+          streamPreview.classList.add('tgr_hidden');
+        } else {
+          streamPreview.classList.add('tgr_transparent');
+        }
         console.log('hidden', channelName, gameName);
       }
     }
@@ -57,19 +61,16 @@ chrome.storage.sync.get({
 
   var insertStyle = function () {
     var style = document.createElement('style');
-    if (storage.removeItems) {
-      style.textContent += getStyle('.tgr_hidden', {
-        display: 'none'
-      });
-    } else {
-      style.textContent += getStyle('.tgr_hidden', {
-        opacity: .5,
-        transition: 'opacity 0.3s'
-      });
-      style.textContent += getStyle('.tgr_hidden:hover', {
-        opacity: 1
-      });
-    }
+    style.textContent += getStyle('.tgr_hidden', {
+      display: 'none'
+    });
+    style.textContent += getStyle('.tgr_transparent', {
+      opacity: .5,
+      transition: 'opacity 0.3s'
+    });
+    style.textContent += getStyle('.tgr_transparent:hover', {
+      opacity: 1
+    });
     document.body.appendChild(style);
   };
 
@@ -118,6 +119,9 @@ chrome.storage.sync.get({
     if (changeChannelList && JSON.stringify(changeChannelList.newValue) !== JSON.stringify(channelList)) {
       hasChanges = true;
       setChannelList(changeChannelList.newValue);
+    }
+    if (changes.removeItems) {
+      storage.removeItems = changes.removeItems.newValue;
     }
     if (hasChanges) {
       refresh();
