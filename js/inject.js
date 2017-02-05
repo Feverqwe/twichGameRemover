@@ -1,6 +1,29 @@
 /**
  * Created by anton on 05.02.17.
  */
+var getParent = function (node, selector) {
+  if (node.matches(selector)) {
+    return node;
+  }
+  if (!node.matches(selector + ' ' + node.tagName)) {
+    return null;
+  }
+  node = node.parentNode;
+  for (var parent = node; parent; parent = parent.parentNode) {
+    if (parent.nodeType === 1) {
+      if (parent.matches(selector)) {
+        return parent;
+      }
+    }
+  }
+  return null;
+};
+var getStyle = function (selector, css) {
+  return selector + '{' + Object.keys(css).map(function (key) {
+      return key + ': ' + css[key];
+    }).join(';') + '}';
+};
+
 chrome.storage.sync.get({
   gameList: [],
   channelList: [],
@@ -9,6 +32,7 @@ chrome.storage.sync.get({
   var matchSelector = '.qa-stream-preview .boxart';
   var gameList = [];
   var channelList = [];
+
   var setGameList = function (list) {
     gameList.splice(0);
     gameList.push.apply(gameList, list);
@@ -17,6 +41,7 @@ chrome.storage.sync.get({
     channelList.splice(0);
     channelList.push.apply(channelList, list);
   };
+
   var testBoxArt = function (boxArtElement) {
     var streamPreview = getParent(boxArtElement, '.qa-stream-preview');
     if (streamPreview) {
@@ -29,11 +54,7 @@ chrome.storage.sync.get({
       }
     }
   };
-  var getStyle = function (selector, css) {
-    return selector + '{' + Object.keys(css).map(function (key) {
-        return key + ': ' + css[key];
-      }).join(';') + '}';
-  };
+
   var insertStyle = function () {
     var style = document.createElement('style');
     if (storage.removeItems) {
@@ -51,32 +72,23 @@ chrome.storage.sync.get({
     }
     document.body.appendChild(style);
   };
-  var getParent = function (node, selector) {
-    if (node.matches(selector)) {
-      return node;
-    }
-    if (!node.matches(selector + ' ' + node.tagName)) {
-      return null;
-    }
-    node = node.parentNode;
-    for (var parent = node; parent; parent = parent.parentNode) {
-      if (parent.nodeType === 1) {
-        if (parent.matches(selector)) {
-          return parent;
-        }
-      }
-    }
-    return null;
-  };
+
   var onAddedNode = function (nodeList) {
     for (var i = 0, node; node = nodeList[i]; i++) {
       testBoxArt(node);
     }
   };
+
   var refresh = function () {
     onAddedNode(document.body.querySelectorAll(matchSelector));
   };
-  var initObserver = function () {
+
+  insertStyle();
+  setGameList(storage.gameList);
+  setChannelList(storage.gameList);
+  refresh();
+
+  (function () {
     var mObserver = new MutationObserver(function (mutations) {
       var mutation, node, nodeList = [];
       while (mutation = mutations.shift()) {
@@ -93,14 +105,7 @@ chrome.storage.sync.get({
       childList: true,
       subtree: true
     });
-  };
-
-  insertStyle();
-
-  setGameList(storage.gameList);
-  setChannelList(storage.gameList);
-  refresh();
-  initObserver();
+  })();
 
   chrome.storage.onChanged.addListener(function (changes) {
     var hasChanges = false;

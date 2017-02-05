@@ -1,4 +1,14 @@
 select {
-    height: 480px;
-    width: 240px;
+    height: 200px;
+    min-width: 300px;
+}
+
+.list__add {
+    margin: 5px;
+}
+.list__select {
+    margin: 5px;
+}
+.list__remove {
+    margin: 5px;
 }

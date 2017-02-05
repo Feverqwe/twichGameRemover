@@ -6,9 +6,14 @@
     "16": "img/icon_16.png"
   },
   "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["*://*.twitch.tv/*"],
+      "js": ["js/inject.js"]
+    }
+  ],
   "permissions": ["storage"],
   "name": "Twitch game remover",
   "description": "",
-  "default_locale": "en",
   "version": "1.0"
 }
