@@ -1,14 +1,53 @@
-select {
-    height: 200px;
-    min-width: 300px;
+.block__ctr {
+    display: flex;
+    flex-direction: row;
 }
 
-.list__add {
+h2 {
+    margin: 5px 0;
+    cursor: default;
+}
+
+select {
+    height: 500px;
+    width: 400px;
+}
+
+.block .add {
     margin: 5px;
 }
-.list__select {
-    margin: 5px;
+
+.list__item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 30px;
+    cursor: default;
 }
-.list__remove {
-    margin: 5px;
+
+.list__item:hover {
+    background-color: #e0e0e0;
+}
+
+.item__name {
+    flex-grow: 1;
+    padding-left: 5px;
+}
+
+.item__btn {
+    display: block;
+    height: 30px;
+    width: 30px;
+}
+
+.item__btn.btn-remove {
+    background: url("../img/remove.svg") center no-repeat;
+    background-size: 18px;
+    opacity: 0.5;
+}
+
+.item__btn.btn-remove:hover {
+    background: url("../img/remove.svg") center no-repeat;
+    background-size: 18px;
+    opacity: 0.8;
 }

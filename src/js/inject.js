@@ -29,7 +29,10 @@ chrome.storage.sync.get({
   channelList: [],
   removeItems: true
 }, function (storage) {
-  var matchSelector = '.qa-stream-preview .boxart';
+  var matchSelector = '.qa-stream-preview';
+  var boxArtSelector = '.boxart';
+  var channelNameSelector = '.js-channel-link';
+
   var gameList = [];
   var channelList = [];
 
@@ -42,45 +45,69 @@ chrome.storage.sync.get({
     channelList.push.apply(channelList, list);
   };
 
-  var testBoxArt = function (boxArtElement) {
-    var streamPreview = getParent(boxArtElement, '.qa-stream-preview');
-    if (streamPreview) {
-      var gameName = boxArtElement.getAttribute('title') || boxArtElement.getAttribute('original-title');
-      var channelName = streamPreview.querySelector('.js-channel-link');
-      channelName = channelName && channelName.textContent.trim();
-      if (gameList.indexOf(gameName) !== -1 || channelList.indexOf(channelName) !== -1) {
-        if (storage.removeItems) {
-          streamPreview.classList.add('tgr_hidden');
-        } else {
-          streamPreview.classList.add('tgr_transparent');
-        }
-        console.log('hidden', channelName, gameName);
-      }
+  var testElement = function (streamPreview) {
+    var gameName = '';
+    var boxArtElement = streamPreview.querySelector(boxArtSelector);
+    if (boxArtElement) {
+      gameName = boxArtElement.getAttribute('title') || boxArtElement.getAttribute('original-title') || '';
     }
+
+    var channelName = '';
+    var channelElement = streamPreview.querySelector(channelNameSelector);
+    if (channelElement) {
+      channelName = channelElement.textContent.trim();
+    }
+
+    var result = false;
+    if (gameList.indexOf(gameName) !== -1 || channelList.indexOf(channelName) !== -1) {
+      streamPreview.classList.add('tgr_hidden');
+      result = true;
+    }
+    return result;
   };
 
+  var styleNode = null;
   var insertStyle = function () {
     var style = document.createElement('style');
-    style.textContent += getStyle('.tgr_hidden', {
-      display: 'none'
-    });
-    style.textContent += getStyle('.tgr_transparent .thumb', {
-      opacity: .5,
-      transition: 'opacity 0.3s'
-    });
-    style.textContent += getStyle('.tgr_transparent .thumb:hover', {
-      opacity: 1
-    });
-    document.body.appendChild(style);
+
+    if (storage.removeItems) {
+      style.textContent += getStyle('.tgr_hidden', {
+        display: 'none'
+      });
+    } else {
+      style.textContent += getStyle('.tgr_hidden .thumb', {
+        opacity: .5,
+        transition: 'opacity 0.3s'
+      });
+      style.textContent += getStyle('.tgr_hidden .thumb:hover', {
+        opacity: 1
+      });
+    }
+
+    if (styleNode) {
+      styleNode.parentNode.replaceChild(style, styleNode);
+    } else {
+      document.body.appendChild(style);
+    }
+    styleNode = style;
   };
 
   var onAddedNode = function (nodeList) {
+    var removed = 0;
+    var count = 0;
     var matched = [];
     for (var i = 0, node; node = nodeList[i]; i++) {
       if (matched.indexOf(node) === -1) {
         matched.push(node);
-        testBoxArt(node);
+        count++;
+        if (testElement(node)) {
+          removed++;
+        }
       }
+    }
+    if (100 / count * removed > 50) {
+      // console.log('resize', removed, count);
+      window.dispatchEvent(new CustomEvent('resize'));
     }
   };
 
@@ -99,7 +126,11 @@ chrome.storage.sync.get({
       while (mutation = mutations.shift()) {
         for (var i = 0; node = mutation.addedNodes[i]; i++) {
           if (node.nodeType === 1) {
-            nodeList.push.apply(nodeList, node.querySelectorAll(matchSelector));
+            if (node.matches(matchSelector)) {
+              nodeList.push(node);
+            } else {
+              nodeList.push.apply(nodeList, node.querySelectorAll(matchSelector));
+            }
           }
         }
       }
@@ -124,8 +155,9 @@ chrome.storage.sync.get({
       hasChanges = true;
       setChannelList(changeChannelList.newValue);
     }
-    if (changes.removeItems) {
+    if (changes.removeItems && storage.removeItems !== changes.removeItems.newValue) {
       storage.removeItems = changes.removeItems.newValue;
+      insertStyle();
     }
     if (hasChanges) {
       refresh();

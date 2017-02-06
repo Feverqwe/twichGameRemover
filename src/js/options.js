@@ -6,62 +6,72 @@ chrome.storage.sync.get({
   channelList: [],
   removeItems: true
 }, function (storage) {
+  var cloneList = {};
   var loadList = function (type) {
-    var selectNode = document.querySelector('.' + type + '__select');
-    selectNode.textContent = '';
+    var listSelect = document.querySelector('.' + type + ' .list');
+    listSelect.textContent = '';
     var list = storage[type];
-
+    cloneList[type] = list.slice(0);
     list.forEach(function (name, index) {
-      var optionNode = document.createElement('option');
-      optionNode.value = index;
-      optionNode.textContent = name;
-      selectNode.appendChild(optionNode);
+      var node = document.createElement('div');
+      node.classList.add('list__item');
+      node.dataset.index = index;
+
+      var nameNode = document.createElement('span');
+      nameNode.classList.add('item__name');
+      nameNode.textContent = name;
+
+      var removeNode = document.createElement('a');
+      removeNode.href = '#remove';
+      removeNode.classList.add('item__btn');
+      removeNode.classList.add('btn-remove');
+      removeNode.title = 'Remove';
+
+      node.appendChild(nameNode);
+      node.appendChild(removeNode);
+      listSelect.appendChild(node);
     });
   };
 
   var initList = function (type) {
     loadList(type);
 
-    var selectNode = document.querySelector('.' + type + '__select');
-
-    var addBtnNode = document.querySelector('.' + type + '__add');
+    var addBtnNode = document.querySelector('.' + type + ' .add');
     addBtnNode.addEventListener('click', function (e) {
       e.preventDefault();
       var name = inputNode.value;
+      var list = storage[type];
 
-      storage[type].push(name);
+      list.push(name);
       chrome.storage.sync.set(storage, function () {
         inputNode.value = '';
         loadList(type);
       });
     });
 
-    var inputNode = document.querySelector('.' + type + '__input');
+    var inputNode = document.querySelector('.' + type + ' .input');
     inputNode.addEventListener('keypress', function (e) {
       if (e.keyCode === 13) {
         addBtnNode.dispatchEvent(new MouseEvent('click', {cancelable: true}));
       }
     });
 
-    var removeBtnNode = document.querySelector('.' + type + '__remove');
-    removeBtnNode.addEventListener('click', function (e) {
-      e.preventDefault();
-      var list = storage[type];
-      var filteredItems = [];
-      var options = [];
-      for (var i = 0, option; option = selectNode.selectedOptions[i]; i++) {
-        filteredItems.push(list[option.value]);
-        options.push(option);
+    var listSelect = document.querySelector('.' + type + ' .list');
+    listSelect.addEventListener('click', function (e) {
+      var target = e.target;
+      if (target.tagName === 'A' && target.classList.contains('btn-remove')) {
+        e.preventDefault();
+        var itemNode = target.parentNode;
+        var index = itemNode.dataset.index;
+        var list = storage[type];
+        var item = cloneList[type][index];
+        var pos = list.indexOf(item);
+        if (pos !== -1) {
+          list.splice(pos, 1);
+          itemNode.parentNode.removeChild(itemNode);
+          chrome.storage.sync.set(storage);
+        }
       }
-      options.forEach(function (node) {
-        node.parentNode.removeChild(node);
-      });
-      list = list.filter(function (name) {
-        return filteredItems.indexOf(name) === -1;
-      });
-
-      storage[type] = list;
-      chrome.storage.sync.set(storage);
     });
   };
 

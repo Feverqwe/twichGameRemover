@@ -6,35 +6,27 @@
     <link href="css/options.css" type="text/css" rel="stylesheet">
 </head>
 <body>
-    <div class="gameList list">
+<div class="block__ctr">
+    <div class="gameList block">
         <h2>Games</h2>
         <div class="list__add">
-            <input class="gameList__input" type="text">
-            <input class="gameList__add" type="button" value="Add">
+            <input class="input" type="text">
+            <input class="add" type="button" value="Add">
         </div>
-        <div class="list__select">
-            <select class="gameList__select" multiple="multiple"></select>
-        </div>
-        <div class="list__remove">
-            <input class="gameList__remove" type="button" value="Remove selected">
-        </div>
+        <div class="list"></div>
     </div>
-    <div class="channelList list">
+    <div class="channelList block">
         <h2>Channels</h2>
         <div class="list__add">
-            <input class="channelList__input" type="text">
-            <input class="channelList__add" type="button" value="Add">
+            <input class="input" type="text">
+            <input class="add" type="button" value="Add">
         </div>
-        <div class="list__select">
-            <select class="channelList__select" multiple="multiple"></select>
-        </div>
-        <div class="list__remove">
-            <input class="channelList__remove" type="button" value="Remove selected">
-        </div>
+        <div class="list"></div>
     </div>
-    <div>
-        <label><input type="checkbox" class="removeItems__input">Remove items</label>
-    </div>
+</div>
+<div>
+    <label><input type="checkbox" class="removeItems__input">Remove items</label>
+</div>
     <script src="js/options.js"></script>
 </body>
 </html>
