@@ -17,11 +17,15 @@ select {
     margin: 5px;
 }
 
+.list {
+    width: 460px;
+}
+
 .list__item {
-    display: flex;
+    display: inline-flex;
     flex-direction: row;
     align-items: center;
-    height: 30px;
+    width: 230px;
     cursor: default;
 }
 
@@ -36,8 +40,9 @@ select {
 
 .item__btn {
     display: block;
-    height: 30px;
-    width: 30px;
+    height: 24px;
+    width: 24px;
+    min-width: 24px;
 }
 
 .item__btn.btn-remove {
