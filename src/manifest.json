@@ -15,5 +15,5 @@
   "permissions": ["storage"],
   "name": "Twitch game remover",
   "description": "",
-  "version": "1.2"
+  "version": "1.3"
 }
