@@ -191,7 +191,7 @@ chrome.storage.sync.get({
       opacity: 0.8
     });
 
-    if (styleNode) {
+    if (styleNode && styleNode.parentNode) {
       styleNode.parentNode.replaceChild(style, styleNode);
     } else {
       document.body.appendChild(style);
