@@ -12,8 +12,8 @@ chrome.storage.sync.get({
     var listSelect = document.querySelector('.' + type + ' .list');
     listSelect.textContent = '';
     var list = storage[type];
-    cloneList[type] = list.slice(0);
-    list.forEach(function (name, index) {
+    cloneList[type] = list.slice(0).sort();
+    cloneList[type].forEach(function (name, index) {
       var node = document.createElement('div');
       node.classList.add('list__item');
       node.dataset.index = index;
