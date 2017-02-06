@@ -84,6 +84,7 @@ chrome.storage.sync.get({
     if (!this.querySelector('.tgr__hide_btn-channel')) {
       var hideBtn = document.createElement('a');
       hideBtn.href = '#hide';
+      hideBtn.title = 'Remove';
       hideBtn.dataset.tgrInfo = this.dataset.tgrInfo;
       hideBtn.classList.add('tgr__hide_btn-channel');
       hideBtn.addEventListener('click', onHideBtnClick);
@@ -98,6 +99,7 @@ chrome.storage.sync.get({
     if (!this.querySelector('.tgr__hide_btn-game')) {
       var hideBtn = document.createElement('a');
       hideBtn.href = '#hide';
+      hideBtn.title = 'Remove';
       hideBtn.dataset.tgrInfo = this.dataset.tgrInfo;
       hideBtn.classList.add('tgr__hide_btn-game');
       hideBtn.addEventListener('click', onHideBtnClick);
