@@ -62,6 +62,8 @@ chrome.storage.sync.get({
     if (gameList.indexOf(gameName) !== -1 || channelList.indexOf(channelName) !== -1) {
       streamPreview.classList.add('tgr_hidden');
       result = true;
+    } else {
+      streamPreview.classList.remove('tgr_hidden');
     }
     return result;
   };
@@ -105,7 +107,7 @@ chrome.storage.sync.get({
         }
       }
     }
-    if (100 / count * removed > 50) {
+    if (storage.removeItems && 100 / count * removed > 50) {
       // console.log('resize', removed, count);
       window.dispatchEvent(new CustomEvent('resize'));
     }
