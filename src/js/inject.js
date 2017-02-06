@@ -143,7 +143,7 @@ chrome.storage.sync.get({
   };
 
   var styleNode = null;
-  var insertStyle = function () {
+  var refreshStyle = function () {
     var style = document.createElement('style');
 
     if (storage.removeItems) {
@@ -222,7 +222,7 @@ chrome.storage.sync.get({
     onAddedNode(document.body.querySelectorAll(matchSelector));
   };
 
-  insertStyle();
+  refreshStyle();
   refreshGameList();
   refreshChannelList();
   refresh();
@@ -266,7 +266,7 @@ chrome.storage.sync.get({
     }
     if (changes.removeItems && storage.removeItems !== changes.removeItems.newValue) {
       storage.removeItems = changes.removeItems.newValue;
-      insertStyle();
+      refreshStyle();
     }
     if (hasChanges) {
       refresh();
