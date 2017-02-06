@@ -4,7 +4,8 @@
 chrome.storage.sync.get({
   gameList: [],
   channelList: [],
-  removeItems: true
+  removeItems: true,
+  showControls: true
 }, function (storage) {
   var cloneList = {};
   var loadList = function (type) {
@@ -82,9 +83,18 @@ chrome.storage.sync.get({
       chrome.storage.sync.set(storage);
     });
 
+    var showControlsCheckbox = document.querySelector('.showControls__input');
+    showControlsCheckbox.addEventListener('change', function (e) {
+      storage.showControls = this.checked;
+      chrome.storage.sync.set(storage);
+    });
+
     return function () {
       if (removeItemCheckbox.checked !== storage.removeItems) {
         removeItemCheckbox.checked = storage.removeItems;
+      }
+      if (showControlsCheckbox.checked !== storage.showControls) {
+        showControlsCheckbox.checked = storage.showControls;
       }
     };
   })();
@@ -106,6 +116,9 @@ chrome.storage.sync.get({
     }
 
     if (changes.removeItems) {
+      refreshCheckBox();
+    }
+    if (changes.showControls) {
       refreshCheckBox();
     }
   });

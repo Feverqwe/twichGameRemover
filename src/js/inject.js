@@ -1,23 +1,6 @@
 /**
  * Created by anton on 05.02.17.
  */
-var getParent = function (node, selector) {
-  if (node.matches(selector)) {
-    return node;
-  }
-  if (!node.matches(selector + ' ' + node.tagName)) {
-    return null;
-  }
-  node = node.parentNode;
-  for (var parent = node; parent; parent = parent.parentNode) {
-    if (parent.nodeType === 1) {
-      if (parent.matches(selector)) {
-        return parent;
-      }
-    }
-  }
-  return null;
-};
 var getStyle = function (selector, css) {
   return selector + '{' + Object.keys(css).map(function (key) {
       var _key = key.replace(/([A-Z])/g, function (text, letter) {
@@ -27,42 +10,31 @@ var getStyle = function (selector, css) {
     }).join(';') + '}';
 };
 
+var getRemoveIcon = function (width, height) {
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  var svgNS = svg.namespaceURI;
+  svg.setAttribute('width', width || '18');
+  svg.setAttribute('height', height || '18');
+  svg.setAttribute('viewBox', '0 0 24 24');
+
+  var path = document.createElementNS(svgNS, 'path');
+  svg.appendChild(path);
+  path.setAttribute('d', 'M14.8 12l3.6-3.6c.8-.8.8-2 0-2.8-.8-.8-2-.8-2.8 0L12 9.2 8.4 5.6c-.8-.8-2-.8-2.8 0-.8.8-.8 2 0 2.8L9.2 12l-3.6 3.6c-.8.8-.8 2 0 2.8.4.4.9.6 1.4.6s1-.2 1.4-.6l3.6-3.6 3.6 3.6c.4.4.9.6 1.4.6s1-.2 1.4-.6c.8-.8.8-2 0-2.8L14.8 12z');
+
+  path.setAttribute('fill', '#FFF');
+
+  return svg;
+};
+
 chrome.storage.sync.get({
   gameList: [],
   channelList: [],
-  removeItems: true
+  removeItems: true,
+  showControls: true
 }, function (storage) {
   var matchSelector = '.qa-stream-preview';
   var boxArtSelector = '.boxart';
   var channelNameSelector = '.js-channel-link';
-
-  var gameList = [];
-  var channelList = [];
-
-  var refreshGameList = function () {
-    gameList.splice(0);
-    gameList.push.apply(gameList, storage.gameList);
-  };
-  var refreshChannelList = function () {
-    channelList.splice(0);
-    channelList.push.apply(channelList, storage.channelList);
-  };
-
-  var getRemoveIcon = function (width, height) {
-    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    var svgNS = svg.namespaceURI;
-    svg.setAttribute('width', width || '18');
-    svg.setAttribute('height', height || '18');
-    svg.setAttribute('viewBox', '0 0 24 24');
-
-    var path = document.createElementNS(svgNS, 'path');
-    svg.appendChild(path);
-    path.setAttribute('d', 'M14.8 12l3.6-3.6c.8-.8.8-2 0-2.8-.8-.8-2-.8-2.8 0L12 9.2 8.4 5.6c-.8-.8-2-.8-2.8 0-.8.8-.8 2 0 2.8L9.2 12l-3.6 3.6c-.8.8-.8 2 0 2.8.4.4.9.6 1.4.6s1-.2 1.4-.6l3.6-3.6 3.6 3.6c.4.4.9.6 1.4.6s1-.2 1.4-.6c.8-.8.8-2 0-2.8L14.8 12z');
-
-    path.setAttribute('fill', '#FFF');
-
-    return svg;
-  };
 
   var onHideBtnClick = function (e) {
     e.preventDefault();
@@ -81,11 +53,13 @@ chrome.storage.sync.get({
 
   var onChannelNameOver = function () {
     this.removeEventListener('mouseenter', onChannelNameOver);
-    if (!this.querySelector('.tgr__hide_btn-channel')) {
+    var tgrInfo = this.dataset.tgrInfo;
+    this.removeAttribute('data-tgr-info');
+    if (storage.showControls && !this.querySelector('.tgr__hide_btn-channel')) {
       var hideBtn = document.createElement('a');
       hideBtn.href = '#hide';
       hideBtn.title = 'Remove';
-      hideBtn.dataset.tgrInfo = this.dataset.tgrInfo;
+      hideBtn.dataset.tgrInfo = tgrInfo;
       hideBtn.classList.add('tgr__hide_btn-channel');
       hideBtn.addEventListener('click', onHideBtnClick);
 
@@ -96,11 +70,13 @@ chrome.storage.sync.get({
 
   var onBoxArtOver = function () {
     this.removeEventListener('mouseenter', onBoxArtOver);
-    if (!this.querySelector('.tgr__hide_btn-game')) {
+    var tgrInfo = this.dataset.tgrInfo;
+    this.removeAttribute('data-tgr-info');
+    if (storage.showControls && !this.querySelector('.tgr__hide_btn-game')) {
       var hideBtn = document.createElement('a');
       hideBtn.href = '#hide';
       hideBtn.title = 'Remove';
-      hideBtn.dataset.tgrInfo = this.dataset.tgrInfo;
+      hideBtn.dataset.tgrInfo = tgrInfo;
       hideBtn.classList.add('tgr__hide_btn-game');
       hideBtn.addEventListener('click', onHideBtnClick);
 
@@ -113,27 +89,31 @@ chrome.storage.sync.get({
     var gameName = '';
     var boxArtElement = streamPreview.querySelector(boxArtSelector);
     if (boxArtElement) {
-      boxArtElement.addEventListener('mouseenter', onBoxArtOver);
       gameName = boxArtElement.getAttribute('title') || boxArtElement.getAttribute('original-title') || '';
-      boxArtElement.dataset.tgrInfo = JSON.stringify({
-        type: 'gameList',
-        value: gameName
-      });
+      if (storage.showControls) {
+        boxArtElement.addEventListener('mouseenter', onBoxArtOver);
+        boxArtElement.dataset.tgrInfo = JSON.stringify({
+          type: 'gameList',
+          value: gameName
+        });
+      }
     }
 
     var channelName = '';
     var channelElement = streamPreview.querySelector(channelNameSelector);
     if (channelElement) {
-      channelElement.addEventListener('mouseenter', onChannelNameOver);
       channelName = channelElement.textContent.trim();
-      channelElement.dataset.tgrInfo = JSON.stringify({
-        type: 'channelList',
-        value: channelName
-      });
+      if (storage.showControls) {
+        channelElement.addEventListener('mouseenter', onChannelNameOver);
+        channelElement.dataset.tgrInfo = JSON.stringify({
+          type: 'channelList',
+          value: channelName
+        });
+      }
     }
 
     var result = false;
-    if (gameList.indexOf(gameName) !== -1 || channelList.indexOf(channelName) !== -1) {
+    if (storage.gameList.indexOf(gameName) !== -1 || storage.channelList.indexOf(channelName) !== -1) {
       streamPreview.classList.add('tgr__hidden');
       result = true;
     } else {
@@ -160,36 +140,45 @@ chrome.storage.sync.get({
       });
     }
 
-    style.textContent += getStyle('.tgr__hide_btn-game', {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      zIndex: 10,
-      display: 'block',
-      backgroundColor: '#000',
-      opacity: 0,
-      lineHeight: 0
-    });
-    style.textContent += getStyle('*:hover > .tgr__hide_btn-game', {
-      opacity: 0.5
-    });
-    style.textContent += getStyle('.tgr__hide_btn-game:hover', {
-      opacity: 0.8
-    });
+    if (storage.showControls) {
+      style.textContent += getStyle('.tgr__hide_btn-game', {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        zIndex: 10,
+        display: 'block',
+        backgroundColor: '#000',
+        opacity: 0,
+        lineHeight: 0
+      });
+      style.textContent += getStyle('*:hover > .tgr__hide_btn-game', {
+        opacity: 0.5
+      });
+      style.textContent += getStyle('.tgr__hide_btn-game:hover', {
+        opacity: 0.8
+      });
 
-    style.textContent += getStyle('.tgr__hide_btn-channel', {
-      display: 'inline-block',
-      backgroundColor: '#000',
-      opacity: 0,
-      lineHeight: 0,
-      verticalAlign: 'text-bottom'
-    });
-    style.textContent += getStyle('*:hover > .tgr__hide_btn-channel', {
-      opacity: 0.5
-    });
-    style.textContent += getStyle('.tgr__hide_btn-channel:hover', {
-      opacity: 0.8
-    });
+      style.textContent += getStyle('.tgr__hide_btn-channel', {
+        display: 'inline-block',
+        backgroundColor: '#000',
+        opacity: 0,
+        lineHeight: 0,
+        verticalAlign: 'text-bottom'
+      });
+      style.textContent += getStyle('*:hover > .tgr__hide_btn-channel', {
+        opacity: 0.5
+      });
+      style.textContent += getStyle('.tgr__hide_btn-channel:hover', {
+        opacity: 0.8
+      });
+    } else {
+      style.textContent += getStyle([
+        '.tgr__hide_btn-game',
+        '.tgr__hide_btn-channel'
+      ], {
+        display: 'none'
+      });
+    }
 
     if (styleNode && styleNode.parentNode) {
       styleNode.parentNode.replaceChild(style, styleNode);
@@ -223,8 +212,6 @@ chrome.storage.sync.get({
   };
 
   refreshStyle();
-  refreshGameList();
-  refreshChannelList();
   refresh();
 
   (function () {
@@ -252,20 +239,27 @@ chrome.storage.sync.get({
 
   chrome.storage.onChanged.addListener(function (changes) {
     var hasChanges = false;
+    var hasStyleChanges = false;
     var changeGameList = changes.gameList;
-    if (changeGameList && JSON.stringify(changeGameList.newValue) !== JSON.stringify(gameList)) {
+    if (changeGameList && JSON.stringify(changeGameList.newValue) !== JSON.stringify(storage.gameList)) {
       hasChanges = true;
       storage.gameList = changeGameList.newValue;
-      refreshGameList();
     }
     var changeChannelList = changes.channelList;
-    if (changeChannelList && JSON.stringify(changeChannelList.newValue) !== JSON.stringify(channelList)) {
+    if (changeChannelList && JSON.stringify(changeChannelList.newValue) !== JSON.stringify(storage.channelList)) {
       hasChanges = true;
       storage.channelList = changeChannelList.newValue;
-      refreshChannelList();
     }
     if (changes.removeItems && storage.removeItems !== changes.removeItems.newValue) {
       storage.removeItems = changes.removeItems.newValue;
+      hasStyleChanges = true;
+    }
+    if (changes.showControls && storage.showControls !== changes.showControls.newValue) {
+      storage.showControls = changes.showControls.newValue;
+      hasStyleChanges = true;
+      hasChanges = true;
+    }
+    if (hasStyleChanges) {
       refreshStyle();
     }
     if (hasChanges) {
