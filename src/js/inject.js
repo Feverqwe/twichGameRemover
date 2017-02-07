@@ -26,6 +26,25 @@ var getRemoveIcon = function (width, height) {
   return svg;
 };
 
+
+var throttle = function (fn, time) {
+  var lastTime = 0;
+  var timer = null;
+  return function () {
+    clearTimeout(timer);
+    var args = arguments;
+    var now = Date.now();
+    if (now - lastTime > time) {
+      lastTime = now;
+      fn.apply(null, args);
+    } else {
+      timer = setTimeout(function () {
+        fn.apply(null, args);
+      }, time);
+    }
+  };
+};
+
 chrome.storage.sync.get({
   gameList: [],
   channelList: [],
@@ -188,6 +207,11 @@ chrome.storage.sync.get({
     styleNode = style;
   };
 
+  var fixScroll = throttle(function () {
+    // console.log('resize', removed, count);
+    window.dispatchEvent(new CustomEvent('resize'));
+  }, 5 * 1000);
+
   var onAddedNode = function (nodeList) {
     var removed = 0;
     var count = 0;
@@ -201,9 +225,8 @@ chrome.storage.sync.get({
         }
       }
     }
-    if (storage.removeItems && 100 / count * removed > 50) {
-      // console.log('resize', removed, count);
-      window.dispatchEvent(new CustomEvent('resize'));
+    if (storage.removeItems && removed > 0) {
+      fixScroll();
     }
   };
 
