@@ -33,7 +33,7 @@ chrome.storage.sync.get({
   showControls: true
 }, function (storage) {
   var matchSelector = '.qa-stream-preview';
-  var boxArtSelector = '.boxart';
+  var boxArtSelector = '.card__boxpin';
   var channelNameSelector = '.js-channel-link';
 
   var onHideBtnClick = function (e) {
@@ -162,8 +162,7 @@ chrome.storage.sync.get({
         display: 'inline-block',
         backgroundColor: '#000',
         opacity: 0,
-        lineHeight: 0,
-        verticalAlign: 'text-bottom'
+        lineHeight: 0
       });
       style.textContent += getStyle('*:hover > .tgr__hide_btn-channel', {
         opacity: 0.5
