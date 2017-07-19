@@ -35,6 +35,23 @@ chrome.storage.sync.get({
   var matchSelector = '.qa-stream-preview';
   var boxArtSelector = '.card__boxpin';
   var channelNameSelector = '.js-channel-link';
+  var thumbSelector = '.card__img';
+  var gameNameAttrs = ['title', 'original-title'];
+
+  var getGameNameFromNode = function (node) {
+    var name = '';
+    gameNameAttrs.some(function (attr) {
+      var value = node.getAttribute(attr);
+      if (value) {
+        return name = value;
+      }
+    });
+    return name;
+  };
+
+  var getChannelNameFromNode = function (node) {
+    return node.textContent.trim();
+  };
 
   var onHideBtnClick = function (e) {
     e.preventDefault();
@@ -89,7 +106,7 @@ chrome.storage.sync.get({
     var gameName = '';
     var boxArtElement = streamPreview.querySelector(boxArtSelector);
     if (boxArtElement) {
-      gameName = boxArtElement.getAttribute('title') || boxArtElement.getAttribute('original-title') || '';
+      gameName = getGameNameFromNode(boxArtElement);
       if (storage.showControls) {
         boxArtElement.addEventListener('mouseenter', onBoxArtOver);
         boxArtElement.dataset.tgrInfo = JSON.stringify({
@@ -102,7 +119,7 @@ chrome.storage.sync.get({
     var channelName = '';
     var channelElement = streamPreview.querySelector(channelNameSelector);
     if (channelElement) {
-      channelName = channelElement.textContent.trim();
+      channelName = getChannelNameFromNode(channelElement);
       if (storage.showControls) {
         channelElement.addEventListener('mouseenter', onChannelNameOver);
         channelElement.dataset.tgrInfo = JSON.stringify({
@@ -131,11 +148,11 @@ chrome.storage.sync.get({
         display: 'none'
       });
     } else {
-      style.textContent += getStyle('.tgr__hidden .thumb', {
+      style.textContent += getStyle('.tgr__hidden ' + thumbSelector, {
         opacity: .5,
         transition: 'opacity 0.2s'
       });
-      style.textContent += getStyle('.tgr__hidden .thumb:hover', {
+      style.textContent += getStyle('.tgr__hidden ' + thumbSelector + ':hover', {
         opacity: 1
       });
     }
