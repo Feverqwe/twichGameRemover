@@ -32,20 +32,18 @@ chrome.storage.sync.get({
   removeItems: true,
   showControls: true
 }, function (storage) {
-  var matchSelector = '.qa-stream-preview';
-  var boxArtSelector = '.card__boxpin';
-  var channelNameSelector = '.js-channel-link';
-  var thumbSelector = '.card__img';
-  var gameNameAttrs = ['title', 'original-title'];
+  var listItemSelector = '.tw-tower > div';
+  var boxArtSelector = '.live-channel-card__boxart';
+  var gameNameSelector = '.tw-tooltip';
+  var channelNameSelector = '.live-channel-card__videos';
+  var thumbSelector = '.tw-card-img';
 
   var getGameNameFromNode = function (node) {
     var name = '';
-    gameNameAttrs.some(function (attr) {
-      var value = node.getAttribute(attr);
-      if (value) {
-        return name = value;
-      }
-    });
+    var tooltipNode = node.querySelector(gameNameSelector);
+    if (tooltipNode) {
+      name = tooltipNode.textContent.trim();
+    }
     return name;
   };
 
@@ -102,9 +100,9 @@ chrome.storage.sync.get({
     }
   };
 
-  var testElement = function (streamPreview) {
+  var testElement = function (listItemNode) {
     var gameName = '';
-    var boxArtElement = streamPreview.querySelector(boxArtSelector);
+    var boxArtElement = listItemNode.querySelector(boxArtSelector);
     if (boxArtElement) {
       gameName = getGameNameFromNode(boxArtElement);
       if (storage.showControls) {
@@ -117,7 +115,7 @@ chrome.storage.sync.get({
     }
 
     var channelName = '';
-    var channelElement = streamPreview.querySelector(channelNameSelector);
+    var channelElement = listItemNode.querySelector(channelNameSelector);
     if (channelElement) {
       channelName = getChannelNameFromNode(channelElement);
       if (storage.showControls) {
@@ -131,10 +129,10 @@ chrome.storage.sync.get({
 
     var result = false;
     if (storage.gameList.indexOf(gameName) !== -1 || storage.channelList.indexOf(channelName) !== -1) {
-      streamPreview.classList.add('tgr__hidden');
+      listItemNode.classList.add('tgr__hidden');
       result = true;
     } else {
-      streamPreview.classList.remove('tgr__hidden');
+      listItemNode.classList.remove('tgr__hidden');
     }
     return result;
   };
@@ -234,7 +232,7 @@ chrome.storage.sync.get({
   };
 
   var refresh = function () {
-    onAddedNode(document.body.querySelectorAll(matchSelector));
+    onAddedNode(document.body.querySelectorAll(listItemSelector));
   };
 
   refreshStyle();
@@ -246,10 +244,10 @@ chrome.storage.sync.get({
       while (mutation = mutations.shift()) {
         for (var i = 0; node = mutation.addedNodes[i]; i++) {
           if (node.nodeType === 1) {
-            if (node.matches(matchSelector)) {
+            if (node.matches(listItemSelector)) {
               nodeList.push(node);
             } else {
-              nodeList.push.apply(nodeList, node.querySelectorAll(matchSelector));
+              nodeList.push.apply(nodeList, node.querySelectorAll(listItemSelector));
             }
           }
         }
