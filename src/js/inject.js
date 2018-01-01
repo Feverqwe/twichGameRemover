@@ -1,6 +1,8 @@
 /**
  * Created by anton on 05.02.17.
  */
+var DEBUG = false;
+
 var getStyle = function (selector, css) {
   return selector + '{' + Object.keys(css).map(function (key) {
       var _key = key.replace(/([A-Z])/g, function (text, letter) {
@@ -26,30 +28,175 @@ var getRemoveIcon = function (width, height) {
   return svg;
 };
 
-chrome.storage.sync.get({
-  gameList: [],
-  channelList: [],
-  removeItems: true,
-  showControls: true
-}, function (storage) {
-  var listItemSelector = '.tw-tower > div';
-  var boxArtSelector = '.live-channel-card__boxart';
-  var gameNameSelector = '.tw-tooltip';
-  var channelNameSelector = '.live-channel-card__videos';
-  var thumbSelector = '.tw-card-img';
-
-  var getGameNameFromNode = function (node) {
-    var name = '';
-    var tooltipNode = node.querySelector(gameNameSelector);
-    if (tooltipNode) {
-      name = tooltipNode.textContent.trim();
+var TwitchTypeA = function () {
+  /**@private*/
+  this.listItemSelector = '.qa-stream-preview';
+  /**@private*/
+  this.boxArtSelector = '.card__boxpin';
+  /**@private*/
+  this.channelNameSelector = '.js-channel-link';
+  /**@private*/
+  this.gameNameAttrs = ['title', 'original-title'];
+  this.thumbSelector = '.card__img';
+};
+TwitchTypeA.isCurrentType = function () {
+  return /ember/.test(document.body.dataset.page);
+};
+TwitchTypeA.prototype.getItems = function (parent) {
+  return parent.querySelectorAll(this.listItemSelector);
+};
+TwitchTypeA.prototype.matchItem = function (node) {
+  return node.matches(this.listItemSelector);
+};
+TwitchTypeA.prototype._getGameNameFromNode = function (node) {
+  var name = '';
+  this.gameNameAttrs.some(function (attr) {
+    var value = node.getAttribute(attr);
+    if (value) {
+      return name = value;
     }
-    return name;
-  };
+  });
+  return name;
+};
+TwitchTypeA.prototype.getGameName = function (itemNode) {
+  var result = '';
+  var boxArtElement = itemNode.querySelector(this.boxArtSelector);
+  if (boxArtElement) {
+    result = this._getGameNameFromNode(boxArtElement);
+  }
+  return result;
+};
+TwitchTypeA.prototype.addGameControl = function (itemNode, gameName, listener) {
+  var boxArtElement = itemNode.querySelector(this.boxArtSelector);
+  if (boxArtElement) {
+    boxArtElement.addEventListener('mouseenter', listener);
+    boxArtElement.dataset.tgrInfo = JSON.stringify({
+      type: 'gameList',
+      value: gameName
+    });
+  }
+};
+TwitchTypeA.prototype._getChannelNameFromNode = function (node) {
+  return node.textContent.trim();
+};
+TwitchTypeA.prototype.getChannelName = function (itemNode) {
+  var result = '';
+  var channelElement = itemNode.querySelector(this.channelNameSelector);
+  if (channelElement) {
+    result = this._getChannelNameFromNode(channelElement);
+  }
+  return result;
+};
+TwitchTypeA.prototype.addChannelControl = function (itemNode, channelName, listener) {
+  var channelElement = itemNode.querySelector(this.channelNameSelector);
+  if (channelElement) {
+    channelElement.addEventListener('mouseenter', listener);
+    channelElement.dataset.tgrInfo = JSON.stringify({
+      type: 'channelList',
+      value: channelName
+    });
+  }
+};
 
-  var getChannelNameFromNode = function (node) {
-    return node.textContent.trim();
-  };
+var TwitchTypeB = function () {
+  /**@private*/
+  this.listItemSelector = '.tw-tower > div';
+  /**@private*/
+  this.boxArtSelector = '.live-channel-card__boxart';
+  /**@private*/
+  this.gameNameSelector = '.tw-tooltip';
+  /**@private*/
+  this.channelNameSelector = '.live-channel-card__videos';
+  this.thumbSelector = '.tw-card-img';
+};
+TwitchTypeB.isCurrentType = function () {
+  return true;
+};
+TwitchTypeB.prototype.getItems = function (parent) {
+  return parent.querySelectorAll(this.listItemSelector);
+};
+TwitchTypeB.prototype.matchItem = function (node) {
+  return node.matches(this.listItemSelector);
+};
+TwitchTypeB.prototype._getGameNameFromNode = function (node) {
+  var name = '';
+  var tooltipNode = node.querySelector(this.gameNameSelector);
+  if (tooltipNode) {
+    name = tooltipNode.textContent.trim();
+  }
+  return name;
+};
+TwitchTypeB.prototype.getGameName = function (itemNode) {
+  var result = '';
+  var boxArtElement = itemNode.querySelector(this.boxArtSelector);
+  if (boxArtElement) {
+    result = this._getGameNameFromNode(boxArtElement);
+  }
+  return result;
+};
+TwitchTypeB.prototype.addGameControl = function (itemNode, gameName, listener) {
+  var boxArtElement = itemNode.querySelector(this.boxArtSelector);
+  if (boxArtElement) {
+    boxArtElement.addEventListener('mouseenter', listener);
+    boxArtElement.dataset.tgrInfo = JSON.stringify({
+      type: 'gameList',
+      value: gameName
+    });
+  }
+};
+TwitchTypeB.prototype._getChannelNameFromNode = function (node) {
+  return node.textContent.trim();
+};
+TwitchTypeB.prototype.getChannelName = function (itemNode) {
+  var result = '';
+  var channelElement = itemNode.querySelector(this.channelNameSelector);
+  if (channelElement) {
+    result = this._getChannelNameFromNode(channelElement);
+  }
+  return result;
+};
+TwitchTypeB.prototype.addChannelControl = function (itemNode, channelName, listener) {
+  var channelElement = itemNode.querySelector(this.channelNameSelector);
+  if (channelElement) {
+    channelElement.addEventListener('mouseenter', listener);
+    channelElement.dataset.tgrInfo = JSON.stringify({
+      type: 'channelList',
+      value: channelName
+    });
+  }
+};
+
+Promise.resolve().then(function () {
+  var currentTwitchType = null;
+  [TwitchTypeA, TwitchTypeB].some(function (Type) {
+    if (Type.isCurrentType()) {
+      currentTwitchType = new Type();
+      return true;
+    }
+  });
+  if (!currentTwitchType) {
+    throw new Error('Is not supported');
+  }
+  return currentTwitchType;
+}).then(function (currentTwitchType) {
+  return new Promise(function (resolve) {
+    chrome.storage.sync.get({
+      gameList: [],
+      channelList: [],
+      removeItems: true,
+      showControls: true
+    }, resolve);
+  }).then(function (storage) {
+    return {
+      storage: storage,
+      currentTwitchType: currentTwitchType
+    }
+  });
+}).then(function (result) {
+  /**@type {{gameList:string[],channelList:string[],removeItems:boolean,showControls:boolean}}*/
+  var storage = result.storage;
+  /**@type {TwitchTypeA|TwitchTypeB}*/
+  var currentTwitchType = result.currentTwitchType;
 
   var onHideBtnClick = function (e) {
     e.preventDefault();
@@ -101,30 +248,14 @@ chrome.storage.sync.get({
   };
 
   var testElement = function (listItemNode) {
-    var gameName = '';
-    var boxArtElement = listItemNode.querySelector(boxArtSelector);
-    if (boxArtElement) {
-      gameName = getGameNameFromNode(boxArtElement);
-      if (storage.showControls) {
-        boxArtElement.addEventListener('mouseenter', onBoxArtOver);
-        boxArtElement.dataset.tgrInfo = JSON.stringify({
-          type: 'gameList',
-          value: gameName
-        });
-      }
+    var gameName = currentTwitchType.getGameName(listItemNode);
+    if (storage.showControls) {
+      currentTwitchType.addGameControl(listItemNode, gameName, onBoxArtOver);
     }
 
-    var channelName = '';
-    var channelElement = listItemNode.querySelector(channelNameSelector);
-    if (channelElement) {
-      channelName = getChannelNameFromNode(channelElement);
-      if (storage.showControls) {
-        channelElement.addEventListener('mouseenter', onChannelNameOver);
-        channelElement.dataset.tgrInfo = JSON.stringify({
-          type: 'channelList',
-          value: channelName
-        });
-      }
+    var channelName = currentTwitchType.getChannelName(listItemNode);
+    if (storage.showControls) {
+      currentTwitchType.addChannelControl(listItemNode, channelName, onChannelNameOver);
     }
 
     var result = false;
@@ -146,11 +277,11 @@ chrome.storage.sync.get({
         display: 'none'
       });
     } else {
-      style.textContent += getStyle('.tgr__hidden ' + thumbSelector, {
+      style.textContent += getStyle('.tgr__hidden ' + currentTwitchType.thumbSelector, {
         opacity: .5,
         transition: 'opacity 0.2s'
       });
-      style.textContent += getStyle('.tgr__hidden ' + thumbSelector + ':hover', {
+      style.textContent += getStyle('.tgr__hidden ' + currentTwitchType.thumbSelector + ':hover', {
         opacity: 1
       });
     }
@@ -232,7 +363,7 @@ chrome.storage.sync.get({
   };
 
   var refresh = function () {
-    onAddedNode(document.body.querySelectorAll(listItemSelector));
+    onAddedNode(currentTwitchType.getItems(document.body));
   };
 
   refreshStyle();
@@ -244,10 +375,10 @@ chrome.storage.sync.get({
       while (mutation = mutations.shift()) {
         for (var i = 0; node = mutation.addedNodes[i]; i++) {
           if (node.nodeType === 1) {
-            if (node.matches(listItemSelector)) {
+            if (currentTwitchType.matchItem(node)) {
               nodeList.push(node);
             } else {
-              nodeList.push.apply(nodeList, node.querySelectorAll(listItemSelector));
+              nodeList.push.apply(nodeList, currentTwitchType.getItems(node));
             }
           }
         }
@@ -290,4 +421,6 @@ chrome.storage.sync.get({
       refresh();
     }
   });
+}).catch(function (err) {
+  DEBUG && console.error('Run error', err);
 });
