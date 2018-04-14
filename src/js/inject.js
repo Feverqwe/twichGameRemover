@@ -28,6 +28,22 @@ var getRemoveIcon = function (width, height) {
   return svg;
 };
 
+var getParent = function (node, selector) {
+  if (node.nodeType !== 1) {
+    return null;
+  }
+  if (node.matches(selector)) {
+    return node;
+  }
+  if (node.matches(selector + ' ' + node.tagName)) {
+    while (!node.matches(selector)) {
+      node = node.parentNode;
+    }
+    return node;
+  }
+  return null;
+};
+
 var TwitchTypeA = function () {
   /**@private*/
   this.listItemSelector = '.qa-stream-preview';
@@ -113,7 +129,14 @@ TwitchTypeB.isCurrentType = function () {
   return true;
 };
 TwitchTypeB.prototype.getItems = function (parent) {
-  return parent.querySelectorAll(this.listItemSelector);
+  var nodes = parent.querySelectorAll(this.listItemSelector);
+  if (!nodes.length) {
+    var item = getParent(parent, this.listItemSelector);
+    if (item) {
+      nodes = [item];
+    }
+  }
+  return nodes;
 };
 TwitchTypeB.prototype.matchItem = function (node) {
   return node.matches(this.listItemSelector);
