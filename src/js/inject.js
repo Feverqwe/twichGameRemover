@@ -1,16 +1,11 @@
+import TwitchTypeA from "./twitchTypeA";
+import TwitchTypeB from "./twitchTypeB";
+import getStyle from "./getStyle";
+
 /**
  * Created by anton on 05.02.17.
  */
 var DEBUG = false;
-
-var getStyle = function (selector, css) {
-  return selector + '{' + Object.keys(css).map(function (key) {
-      var _key = key.replace(/([A-Z])/g, function (text, letter) {
-        return '-' + letter.toLowerCase();
-      });
-      return _key + ': ' + css[key];
-    }).join(';') + '}';
-};
 
 var getRemoveIcon = function (width, height) {
   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -26,167 +21,6 @@ var getRemoveIcon = function (width, height) {
   path.setAttribute('fill', '#FFF');
 
   return svg;
-};
-
-var getParent = function (node, selector) {
-  if (node.nodeType !== 1) {
-    return null;
-  }
-  if (node.matches(selector)) {
-    return node;
-  }
-  if (node.matches(selector + ' ' + node.tagName)) {
-    while (!node.matches(selector)) {
-      node = node.parentNode;
-    }
-    return node;
-  }
-  return null;
-};
-
-var TwitchTypeA = function () {
-  /**@private*/
-  this.listItemSelector = '.qa-stream-preview';
-  /**@private*/
-  this.boxArtSelector = '.card__boxpin';
-  /**@private*/
-  this.channelNameSelector = '.js-channel-link';
-  /**@private*/
-  this.gameNameAttrs = ['title', 'original-title'];
-  this.thumbSelector = '.card__img';
-};
-TwitchTypeA.isCurrentType = function () {
-  return /ember/.test(document.body.dataset.page);
-};
-TwitchTypeA.prototype.getItems = function (parent) {
-  return parent.querySelectorAll(this.listItemSelector);
-};
-TwitchTypeA.prototype.matchItem = function (node) {
-  return node.matches(this.listItemSelector);
-};
-TwitchTypeA.prototype._getGameNameFromNode = function (node) {
-  var name = '';
-  this.gameNameAttrs.some(function (attr) {
-    var value = node.getAttribute(attr);
-    if (value) {
-      return name = value;
-    }
-  });
-  return name;
-};
-TwitchTypeA.prototype.getGameName = function (itemNode) {
-  var result = '';
-  var boxArtElement = itemNode.querySelector(this.boxArtSelector);
-  if (boxArtElement) {
-    result = this._getGameNameFromNode(boxArtElement);
-  }
-  return result;
-};
-TwitchTypeA.prototype.addGameControl = function (itemNode, gameName, listener) {
-  var boxArtElement = itemNode.querySelector(this.boxArtSelector);
-  if (boxArtElement) {
-    boxArtElement.addEventListener('mouseenter', listener);
-    boxArtElement.dataset.tgrInfo = JSON.stringify({
-      type: 'gameList',
-      value: gameName
-    });
-  }
-};
-TwitchTypeA.prototype._getChannelNameFromNode = function (node) {
-  return node.textContent.trim();
-};
-TwitchTypeA.prototype.getChannelName = function (itemNode) {
-  var result = '';
-  var channelElement = itemNode.querySelector(this.channelNameSelector);
-  if (channelElement) {
-    result = this._getChannelNameFromNode(channelElement);
-  }
-  return result;
-};
-TwitchTypeA.prototype.addChannelControl = function (itemNode, channelName, listener) {
-  var channelElement = itemNode.querySelector(this.channelNameSelector);
-  if (channelElement) {
-    channelElement.addEventListener('mouseenter', listener);
-    channelElement.dataset.tgrInfo = JSON.stringify({
-      type: 'channelList',
-      value: channelName
-    });
-  }
-};
-
-var TwitchTypeB = function () {
-  /**@private*/
-  this.listItemSelector = '.tw-tower > div';
-  /**@private*/
-  this.boxArtSelector = '.live-channel-card__boxart';
-  /**@private*/
-  this.gameNameSelector = '.tw-tooltip';
-  /**@private*/
-  this.channelNameSelector = '.live-channel-card__videos';
-  this.thumbSelector = '.tw-card-img';
-};
-TwitchTypeB.isCurrentType = function () {
-  return true;
-};
-TwitchTypeB.prototype.getItems = function (parent) {
-  var nodes = parent.querySelectorAll(this.listItemSelector);
-  if (!nodes.length) {
-    var item = getParent(parent, this.listItemSelector);
-    if (item) {
-      nodes = [item];
-    }
-  }
-  return nodes;
-};
-TwitchTypeB.prototype.matchItem = function (node) {
-  return node.matches(this.listItemSelector);
-};
-TwitchTypeB.prototype._getGameNameFromNode = function (node) {
-  var name = '';
-  var tooltipNode = node.querySelector(this.gameNameSelector);
-  if (tooltipNode) {
-    name = tooltipNode.textContent.trim();
-  }
-  return name;
-};
-TwitchTypeB.prototype.getGameName = function (itemNode) {
-  var result = '';
-  var boxArtElement = itemNode.querySelector(this.boxArtSelector);
-  if (boxArtElement) {
-    result = this._getGameNameFromNode(boxArtElement);
-  }
-  return result;
-};
-TwitchTypeB.prototype.addGameControl = function (itemNode, gameName, listener) {
-  var boxArtElement = itemNode.querySelector(this.boxArtSelector);
-  if (boxArtElement) {
-    boxArtElement.addEventListener('mouseenter', listener);
-    boxArtElement.dataset.tgrInfo = JSON.stringify({
-      type: 'gameList',
-      value: gameName
-    });
-  }
-};
-TwitchTypeB.prototype._getChannelNameFromNode = function (node) {
-  return node.textContent.trim();
-};
-TwitchTypeB.prototype.getChannelName = function (itemNode) {
-  var result = '';
-  var channelElement = itemNode.querySelector(this.channelNameSelector);
-  if (channelElement) {
-    result = this._getChannelNameFromNode(channelElement);
-  }
-  return result;
-};
-TwitchTypeB.prototype.addChannelControl = function (itemNode, channelName, listener) {
-  var channelElement = itemNode.querySelector(this.channelNameSelector);
-  if (channelElement) {
-    channelElement.addEventListener('mouseenter', listener);
-    channelElement.dataset.tgrInfo = JSON.stringify({
-      type: 'channelList',
-      value: channelName
-    });
-  }
 };
 
 Promise.resolve().then(function () {

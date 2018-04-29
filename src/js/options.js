@@ -1,6 +1,9 @@
 /**
  * Created by anton on 05.02.17.
  */
+
+import '../css/options.css';
+
 chrome.storage.sync.get({
   gameList: [],
   channelList: [],
