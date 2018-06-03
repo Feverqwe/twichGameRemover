@@ -1,41 +1,24 @@
-import TwitchTypeA from "./twitchTypeA";
 import TwitchTypeB from "./twitchTypeB";
 import getStyle from "./getStyle";
 
 /**
  * Created by anton on 05.02.17.
  */
-var DEBUG = false;
-
-var getRemoveIcon = function (width, height) {
-  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  var svgNS = svg.namespaceURI;
-  svg.setAttribute('width', width || '18');
-  svg.setAttribute('height', height || '18');
-  svg.setAttribute('viewBox', '0 0 24 24');
-
-  var path = document.createElementNS(svgNS, 'path');
-  svg.appendChild(path);
-  path.setAttribute('d', 'M14.8 12l3.6-3.6c.8-.8.8-2 0-2.8-.8-.8-2-.8-2.8 0L12 9.2 8.4 5.6c-.8-.8-2-.8-2.8 0-.8.8-.8 2 0 2.8L9.2 12l-3.6 3.6c-.8.8-.8 2 0 2.8.4.4.9.6 1.4.6s1-.2 1.4-.6l3.6-3.6 3.6 3.6c.4.4.9.6 1.4.6s1-.2 1.4-.6c.8-.8.8-2 0-2.8L14.8 12z');
-
-  path.setAttribute('fill', '#FFF');
-
-  return svg;
-};
+const DEBUG = false;
 
 Promise.resolve().then(function () {
-  var currentTwitchType = null;
-  [TwitchTypeA, TwitchTypeB].some(function (Type) {
+  let CurrentTwitchType = null;
+  [TwitchTypeB].some(function (Type) {
     if (Type.isCurrentType()) {
-      currentTwitchType = new Type();
+      CurrentTwitchType = Type;
       return true;
     }
   });
-  if (!currentTwitchType) {
+  if (!CurrentTwitchType) {
     throw new Error('Is not supported');
   }
-  return currentTwitchType;
-}).then(function (currentTwitchType) {
+  return CurrentTwitchType;
+}).then(function (CurrentTwitchType) {
   return new Promise(function (resolve) {
     chrome.storage.sync.get({
       gameList: [],
@@ -46,20 +29,15 @@ Promise.resolve().then(function () {
   }).then(function (storage) {
     return {
       storage: storage,
-      currentTwitchType: currentTwitchType
+      CurrentTwitchType: CurrentTwitchType
     }
   });
 }).then(function (result) {
   /**@type {{gameList:string[],channelList:string[],removeItems:boolean,showControls:boolean}}*/
-  var storage = result.storage;
-  /**@type {TwitchTypeA|TwitchTypeB}*/
-  var currentTwitchType = result.currentTwitchType;
+  const storage = result.storage;
 
-  var onHideBtnClick = function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    var info = JSON.parse(this.dataset.tgrInfo);
-    var pos = storage[info.type].indexOf(info.value);
+  const toggleInfo = function (info) {
+    const pos = storage[info.type].indexOf(info.value);
     if (pos === -1) {
       storage[info.type].push(info.value);
     } else {
@@ -70,52 +48,23 @@ Promise.resolve().then(function () {
     });
   };
 
-  var onChannelNameOver = function () {
-    this.removeEventListener('mouseenter', onChannelNameOver);
-    var tgrInfo = this.dataset.tgrInfo;
-    this.removeAttribute('data-tgr-info');
-    if (storage.showControls && !this.querySelector('.tgr__hide_btn-channel')) {
-      var hideBtn = document.createElement('a');
-      hideBtn.href = '#hide';
-      hideBtn.title = 'Remove';
-      hideBtn.dataset.tgrInfo = tgrInfo;
-      hideBtn.classList.add('tgr__hide_btn-channel');
-      hideBtn.addEventListener('click', onHideBtnClick);
+  /**@type {TwitchTypeB}*/
+  const currentTwitchType = new result.CurrentTwitchType({
+    toggleInfo: toggleInfo
+  });
 
-      hideBtn.appendChild(getRemoveIcon(14, 14));
-      this.appendChild(hideBtn);
-    }
-  };
-
-  var onBoxArtOver = function () {
-    this.removeEventListener('mouseenter', onBoxArtOver);
-    var tgrInfo = this.dataset.tgrInfo;
-    this.removeAttribute('data-tgr-info');
-    if (storage.showControls && !this.querySelector('.tgr__hide_btn-game')) {
-      var hideBtn = document.createElement('a');
-      hideBtn.href = '#hide';
-      hideBtn.title = 'Remove';
-      hideBtn.dataset.tgrInfo = tgrInfo;
-      hideBtn.classList.add('tgr__hide_btn-game');
-      hideBtn.addEventListener('click', onHideBtnClick);
-
-      hideBtn.appendChild(getRemoveIcon(18, 18));
-      this.appendChild(hideBtn);
-    }
-  };
-
-  var testElement = function (listItemNode) {
-    var gameName = currentTwitchType.getGameName(listItemNode);
+  const testElement = function (listItemNode) {
+    const gameName = currentTwitchType.getGameName(listItemNode);
     if (storage.showControls) {
-      currentTwitchType.addGameControl(listItemNode, gameName, onBoxArtOver);
+      currentTwitchType.addGameControl(listItemNode, gameName, 'tgr__toggle');
     }
 
-    var channelName = currentTwitchType.getChannelName(listItemNode);
+    const channelName = currentTwitchType.getChannelName(listItemNode);
     if (storage.showControls) {
-      currentTwitchType.addChannelControl(listItemNode, channelName, onChannelNameOver);
+      currentTwitchType.addChannelControl(listItemNode, channelName, 'tgr__toggle');
     }
 
-    var result = false;
+    let result = false;
     if (storage.gameList.indexOf(gameName) !== -1 || storage.channelList.indexOf(channelName) !== -1) {
       listItemNode.classList.add('tgr__hidden');
       result = true;
@@ -125,9 +74,9 @@ Promise.resolve().then(function () {
     return result;
   };
 
-  var styleNode = null;
-  var refreshStyle = function () {
-    var style = document.createElement('style');
+  let styleNode = null;
+  const refreshStyle = function () {
+    const style = document.createElement('style');
 
     if (storage.removeItems) {
       style.textContent += getStyle('.tgr__hidden', {
@@ -144,39 +93,26 @@ Promise.resolve().then(function () {
     }
 
     if (storage.showControls) {
-      style.textContent += getStyle('.tgr__hide_btn-game', {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        zIndex: 10,
-        display: 'block',
-        backgroundColor: '#000',
-        opacity: 0,
-        lineHeight: 0
-      });
-      style.textContent += getStyle('*:hover > .tgr__hide_btn-game', {
-        opacity: 0.5
-      });
-      style.textContent += getStyle('.tgr__hide_btn-game:hover', {
-        opacity: 0.8
-      });
-
-      style.textContent += getStyle('.tgr__hide_btn-channel', {
+      style.textContent += getStyle('.tgr__toggle', {
         display: 'inline-block',
-        backgroundColor: '#000',
-        opacity: 0,
-        lineHeight: 0
+        position: 'relative',
+        opacity: 0
       });
-      style.textContent += getStyle('*:hover > .tgr__hide_btn-channel', {
+      style.textContent += getStyle('.tgr__toggle svg', {
+        position: 'absolute',
+        bottom: '-4px',
+        display: 'inline-block',
+        backgroundColor: '#000'
+      });
+      style.textContent += getStyle('*:hover > * > .tgr__toggle', {
         opacity: 0.5
       });
-      style.textContent += getStyle('.tgr__hide_btn-channel:hover', {
+      style.textContent += getStyle('.tgr__toggle:hover', {
         opacity: 0.8
       });
     } else {
       style.textContent += getStyle([
-        '.tgr__hide_btn-game',
-        '.tgr__hide_btn-channel'
+        '.tgr__toggle'
       ], {
         display: 'none'
       });
@@ -190,8 +126,8 @@ Promise.resolve().then(function () {
     styleNode = style;
   };
 
-  var fixScroll = (function () {
-    var timer = null;
+  const fixScroll = (function () {
+    let timer = null;
     return function () {
       clearTimeout(timer);
       timer = setTimeout(function () {
@@ -201,11 +137,11 @@ Promise.resolve().then(function () {
     };
   })();
 
-  var onAddedNode = function (nodeList) {
-    var removed = 0;
-    var count = 0;
-    var matched = [];
-    for (var i = 0, node; node = nodeList[i]; i++) {
+  const onAddedNode = function (nodeList) {
+    let removed = 0;
+    let count = 0;
+    const matched = [];
+    for (let i = 0, node; node = nodeList[i]; i++) {
       if (matched.indexOf(node) === -1) {
         matched.push(node);
         count++;
@@ -219,7 +155,7 @@ Promise.resolve().then(function () {
     }
   };
 
-  var refresh = function () {
+  const refresh = function () {
     onAddedNode(currentTwitchType.getItems(document.body));
   };
 
@@ -227,10 +163,11 @@ Promise.resolve().then(function () {
   refresh();
 
   (function () {
-    var mObserver = new MutationObserver(function (mutations) {
-      var mutation, node, nodeList = [];
+    const mObserver = new MutationObserver(function (mutations) {
+      let mutation, node;
+      const nodeList = [];
       while (mutation = mutations.shift()) {
-        for (var i = 0; node = mutation.addedNodes[i]; i++) {
+        for (let i = 0; node = mutation.addedNodes[i]; i++) {
           if (node.nodeType === 1) {
             if (currentTwitchType.matchItem(node)) {
               nodeList.push(node);
@@ -250,14 +187,14 @@ Promise.resolve().then(function () {
   })();
 
   chrome.storage.onChanged.addListener(function (changes) {
-    var hasChanges = false;
-    var hasStyleChanges = false;
-    var changeGameList = changes.gameList;
+    let hasChanges = false;
+    let hasStyleChanges = false;
+    const changeGameList = changes.gameList;
     if (changeGameList && JSON.stringify(changeGameList.newValue) !== JSON.stringify(storage.gameList)) {
       hasChanges = true;
       storage.gameList = changeGameList.newValue;
     }
-    var changeChannelList = changes.channelList;
+    const changeChannelList = changes.channelList;
     if (changeChannelList && JSON.stringify(changeChannelList.newValue) !== JSON.stringify(storage.channelList)) {
       hasChanges = true;
       storage.channelList = changeChannelList.newValue;
