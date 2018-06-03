@@ -20,7 +20,7 @@ class TwitchTypeB {
   constructor(inject) {
     this.inject = inject;
     /**@private*/
-    this.listItemSelector = '.tw-tower > div.stream-thumbnail';
+    this.listItemSelector = '.tw-tower > div';
     /**@private*/
     this.gameNameLinkSelector = 'a.tw-link[href^="/directory/game/"]';
     /**@private*/
