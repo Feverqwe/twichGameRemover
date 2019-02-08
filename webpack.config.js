@@ -40,7 +40,7 @@ const config = {
           loader: 'babel-loader',
           options: {
             presets: [
-              ['env', env]
+              ['@babel/env', env]
             ]
           }
         }
