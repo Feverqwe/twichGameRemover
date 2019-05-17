@@ -13,7 +13,7 @@ const outputPath = path.resolve('./dist/');
 
 const env = {
   targets: {
-    browsers: ['Chrome >= 36']
+    browsers: ['Chrome >= 49']
   }
 };
 
@@ -72,7 +72,12 @@ const config = {
     extensions: ['.js', '.jsx'],
   },
   plugins: [
-    new CleanWebpackPlugin(outputPath),
+    new CleanWebpackPlugin({
+      cleanStaleWebpackAssets: false,
+      cleanOnceBeforeBuildPatterns: [
+        outputPath,
+      ]
+    }),
     new CopyWebpackPlugin([
       {from: './src/manifest.json',},
       {from: './src/icons', to: './icons'},

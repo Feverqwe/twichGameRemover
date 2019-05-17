@@ -1,59 +1,29 @@
 import TwitchTypeB from "./twitchTypeB";
 import getStyle from "./getStyle";
+import storageGet from "../tools/storageGet";
+import defaultConfig from "./defaultConfig";
 
-/**
- * Created by anton on 05.02.17.
- */
 const DEBUG = false;
 
-Promise.resolve().then(function () {
-  let CurrentTwitchType = null;
-  [TwitchTypeB].some(function (Type) {
-    if (Type.isCurrentType()) {
-      CurrentTwitchType = Type;
-      return true;
-    }
-  });
-  if (!CurrentTwitchType) {
-    throw new Error('Is not supported');
-  }
-  return CurrentTwitchType;
-}).then(function (CurrentTwitchType) {
-  return new Promise(function (resolve) {
-    chrome.storage.sync.get({
-      gameList: [],
-      channelList: [],
-      removeItems: true,
-      showControls: true
-    }, resolve);
-  }).then(function (storage) {
-    return {
-      storage: storage,
-      CurrentTwitchType: CurrentTwitchType
-    }
-  });
-}).then(function (result) {
-  /**@type {{gameList:string[],channelList:string[],removeItems:boolean,showControls:boolean}}*/
-  const storage = result.storage;
-
-  const toggleInfo = function (info) {
+storageGet(defaultConfig, 'sync').then((/**@type {{gameList:string[],channelList:string[],removeItems:boolean,showControls:boolean,showRecords:boolean}}*/storage) => {
+  const toggleInfo = (info) => {
     const pos = storage[info.type].indexOf(info.value);
     if (pos === -1) {
       storage[info.type].push(info.value);
     } else {
       storage[info.type].splice(pos, 1);
     }
-    chrome.storage.sync.set(storage, function () {
+    chrome.storage.sync.set(storage, () => {
       refresh();
     });
   };
 
   /**@type {TwitchTypeB}*/
-  const currentTwitchType = new result.CurrentTwitchType({
+  const currentTwitchType = new TwitchTypeB({
     toggleInfo: toggleInfo
   });
 
-  const testElement = function (listItemNode) {
+  const testElement = (listItemNode) => {
     const gameName = currentTwitchType.getGameName(listItemNode);
     if (storage.showControls) {
       currentTwitchType.addGameControl(listItemNode, gameName, 'tgr__toggle');
@@ -64,8 +34,14 @@ Promise.resolve().then(function () {
       currentTwitchType.addChannelControl(listItemNode, channelName, 'tgr__toggle');
     }
 
+    const isRecord = currentTwitchType.isRecord(listItemNode);
+
     let result = false;
-    if (storage.gameList.indexOf(gameName) !== -1 || storage.channelList.indexOf(channelName) !== -1) {
+    if (
+      (isRecord && !storage.showRecords) ||
+      storage.gameList.indexOf(gameName) !== -1 ||
+      storage.channelList.indexOf(channelName) !== -1
+    ) {
       listItemNode.classList.add('tgr__hidden');
       result = true;
     } else {
@@ -75,7 +51,7 @@ Promise.resolve().then(function () {
   };
 
   let styleNode = null;
-  const refreshStyle = function () {
+  const refreshStyle = () => {
     const style = document.createElement('style');
 
     if (storage.removeItems) {
@@ -126,18 +102,18 @@ Promise.resolve().then(function () {
     styleNode = style;
   };
 
-  const fixScroll = (function () {
+  const fixScroll = (() => {
     let timer = null;
-    return function () {
+    return () => {
       clearTimeout(timer);
-      timer = setTimeout(function () {
+      timer = setTimeout(() => {
         // console.log('resize', removed, count);
         window.dispatchEvent(new CustomEvent('resize'));
       }, 250);
     };
   })();
 
-  const onAddedNode = function (nodeList) {
+  const onAddedNode = (nodeList) => {
     let removed = 0;
     let count = 0;
     const matched = [];
@@ -155,15 +131,15 @@ Promise.resolve().then(function () {
     }
   };
 
-  const refresh = function () {
+  const refresh = () => {
     onAddedNode(currentTwitchType.getItems(document.body));
   };
 
   refreshStyle();
   refresh();
 
-  (function () {
-    const mObserver = new MutationObserver(function (mutations) {
+  (() => {
+    const mObserver = new MutationObserver((mutations) => {
       let mutation, node;
       const nodeList = [];
       while (mutation = mutations.shift()) {
@@ -186,7 +162,7 @@ Promise.resolve().then(function () {
     });
   })();
 
-  chrome.storage.onChanged.addListener(function (changes) {
+  chrome.storage.onChanged.addListener((changes) => {
     let hasChanges = false;
     let hasStyleChanges = false;
     const changeGameList = changes.gameList;
@@ -208,6 +184,10 @@ Promise.resolve().then(function () {
       hasStyleChanges = true;
       hasChanges = true;
     }
+    if (changes.showRecords && storage.showRecords !== changes.showRecords.newValue) {
+      storage.showRecords = changes.showRecords.newValue;
+      hasChanges = true;
+    }
     if (hasStyleChanges) {
       refreshStyle();
     }
@@ -215,6 +195,6 @@ Promise.resolve().then(function () {
       refresh();
     }
   });
-}).catch(function (err) {
+}).catch((err) => {
   DEBUG && console.error('Run error', err);
 });

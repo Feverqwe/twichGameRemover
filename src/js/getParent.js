@@ -1,4 +1,4 @@
-var getParent = function (node, selector) {
+var getParent = (node, selector) => {
   if (node.nodeType !== 1) {
     return null;
   }

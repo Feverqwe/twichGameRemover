@@ -1,6 +1,6 @@
 import getParent from "./getParent";
 
-const getRemoveIcon = function (width, height) {
+const getRemoveIcon = (width, height) => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   const svgNS = svg.namespaceURI;
   svg.setAttribute('width', width || '18');
@@ -60,6 +60,9 @@ class TwitchTypeB {
       result = link.textContent.trim();
     }
     return result;
+  }
+  isRecord(itemNode) {
+    return !!itemNode.querySelector('.stream-type-indicator--rerun');
   }
   handleToggleLinkClick(e) {
     e.preventDefault();

@@ -1,31 +1,24 @@
-/**
- * Created by anton on 05.02.17.
- */
-
 import '../css/options.css';
+import defaultConfig from "./defaultConfig";
+import storageGet from "../tools/storageGet";
 
-chrome.storage.sync.get({
-  gameList: [],
-  channelList: [],
-  removeItems: true,
-  showControls: true
-}, function (storage) {
-  var cloneList = {};
-  var loadList = function (type) {
-    var listSelect = document.querySelector('.' + type + ' .list');
+storageGet(defaultConfig, 'sync').then((storage) => {
+  const cloneList = {};
+  const loadList = (type) => {
+    const listSelect = document.querySelector('.' + type + ' .list');
     listSelect.textContent = '';
-    var list = storage[type];
+    const list = storage[type];
     cloneList[type] = list.slice(0);
-    cloneList[type].forEach(function (name, index) {
-      var node = document.createElement('div');
+    cloneList[type].forEach((name, index) => {
+      const node = document.createElement('div');
       node.classList.add('list__item');
       node.dataset.index = index;
 
-      var nameNode = document.createElement('span');
+      const nameNode = document.createElement('span');
       nameNode.classList.add('item__name');
       nameNode.textContent = name;
 
-      var removeNode = document.createElement('a');
+      const removeNode = document.createElement('a');
       removeNode.href = '#remove';
       removeNode.classList.add('item__btn');
       removeNode.classList.add('btn-remove');
@@ -37,39 +30,39 @@ chrome.storage.sync.get({
     });
   };
 
-  var initList = function (type) {
+  const initList = (type) => {
     loadList(type);
 
-    var addBtnNode = document.querySelector('.' + type + ' .add');
-    addBtnNode.addEventListener('click', function (e) {
+    const addBtnNode = document.querySelector('.' + type + ' .add');
+    addBtnNode.addEventListener('click', (e) => {
       e.preventDefault();
-      var name = inputNode.value;
-      var list = storage[type];
+      const name = inputNode.value;
+      const list = storage[type];
 
       list.push(name);
-      chrome.storage.sync.set(storage, function () {
+      chrome.storage.sync.set(storage, () => {
         inputNode.value = '';
         loadList(type);
       });
     });
 
-    var inputNode = document.querySelector('.' + type + ' .input');
-    inputNode.addEventListener('keypress', function (e) {
+    const inputNode = document.querySelector('.' + type + ' .input');
+    inputNode.addEventListener('keypress', (e) => {
       if (e.keyCode === 13) {
         addBtnNode.dispatchEvent(new MouseEvent('click', {cancelable: true}));
       }
     });
 
-    var listSelect = document.querySelector('.' + type + ' .list');
-    listSelect.addEventListener('click', function (e) {
-      var target = e.target;
+    const listSelect = document.querySelector('.' + type + ' .list');
+    listSelect.addEventListener('click', (e) => {
+      const target = e.target;
       if (target.tagName === 'A' && target.classList.contains('btn-remove')) {
         e.preventDefault();
-        var itemNode = target.parentNode;
-        var index = itemNode.dataset.index;
-        var list = storage[type];
-        var item = cloneList[type][index];
-        var pos = list.indexOf(item);
+        const itemNode = target.parentNode;
+        const index = itemNode.dataset.index;
+        const list = storage[type];
+        const item = cloneList[type][index];
+        const pos = list.indexOf(item);
         if (pos !== -1) {
           list.splice(pos, 1);
           itemNode.parentNode.removeChild(itemNode);
@@ -79,25 +72,34 @@ chrome.storage.sync.get({
     });
   };
 
-  var refreshCheckBox = (function () {
-    var removeItemCheckbox = document.querySelector('.removeItems__input');
-    removeItemCheckbox.addEventListener('change', function (e) {
-      storage.removeItems = this.checked;
+  const refreshCheckBox = (() => {
+    const removeItemCheckbox = document.querySelector('.removeItems__input');
+    removeItemCheckbox.addEventListener('change', (e) => {
+      storage.removeItems = e.currentTarget.checked;
       chrome.storage.sync.set(storage);
     });
 
-    var showControlsCheckbox = document.querySelector('.showControls__input');
-    showControlsCheckbox.addEventListener('change', function (e) {
-      storage.showControls = this.checked;
+    const showControlsCheckbox = document.querySelector('.showControls__input');
+    showControlsCheckbox.addEventListener('change', (e) => {
+      storage.showControls = e.currentTarget.checked;
       chrome.storage.sync.set(storage);
     });
 
-    return function () {
+    const showRecordsCheckbox = document.querySelector('.showRecords__input');
+    showRecordsCheckbox.addEventListener('change', (e) => {
+      storage.showRecords = e.currentTarget.checked;
+      chrome.storage.sync.set(storage);
+    });
+
+    return () => {
       if (removeItemCheckbox.checked !== storage.removeItems) {
         removeItemCheckbox.checked = storage.removeItems;
       }
       if (showControlsCheckbox.checked !== storage.showControls) {
         showControlsCheckbox.checked = storage.showControls;
+      }
+      if (showRecordsCheckbox.checked !== storage.showRecords) {
+        showRecordsCheckbox.checked = storage.showRecords;
       }
     };
   })();
@@ -106,22 +108,19 @@ chrome.storage.sync.get({
   initList('channelList');
   refreshCheckBox();
 
-  chrome.storage.onChanged.addListener(function (changes) {
-    var changeGameList = changes.gameList;
+  chrome.storage.onChanged.addListener((changes) => {
+    const changeGameList = changes.gameList;
     if (changeGameList && JSON.stringify(changeGameList.newValue) !== JSON.stringify(storage.gameList)) {
       storage.gameList = changeGameList.newValue;
       loadList('gameList');
     }
-    var changeChannelList = changes.channelList;
+    const changeChannelList = changes.channelList;
     if (changeChannelList && JSON.stringify(changeChannelList.newValue) !== JSON.stringify(storage.channelList)) {
       storage.channelList = changeChannelList.newValue;
       loadList('channelList');
     }
 
-    if (changes.removeItems) {
-      refreshCheckBox();
-    }
-    if (changes.showControls) {
+    if (changes.removeItems || changes.showControls || changes.showRecords) {
       refreshCheckBox();
     }
   });
