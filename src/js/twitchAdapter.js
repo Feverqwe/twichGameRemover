@@ -16,7 +16,7 @@ const getRemoveIcon = (width, height) => {
   return svg;
 };
 
-class TwitchTypeB {
+class TwitchAdapter {
   constructor(inject) {
     this.inject = inject;
     /**@private*/
@@ -24,35 +24,32 @@ class TwitchTypeB {
     /**@private*/
     this.gameNameLinkSelector = 'a.tw-link[href^="/directory/game/"]';
     /**@private*/
-    this.channelNameLinkSelector = '.preview-card-titles__subtitle-wrapper > div:first-child a.tw-link';
+    this.channelNameLinkSelector = 'a.tw-link[href$="/videos"]:not([data-test-selector="preview-card-avatar"])';
     this.thumbSelector = '.preview-card-thumbnail__image';
 
     this.handleToggleLinkClick = this.handleToggleLinkClick.bind(this);
   }
+
   getItems(parent) {
-    const nodes = parent.querySelectorAll(this.listItemSelector);
-    /*if (!nodes.length) {
-      var item = getParent(parent, this.listItemSelector);
-      if (item) {
-        nodes = [item];
-      }
-    }*/
-    return nodes;
+    return parent.querySelectorAll(this.listItemSelector);
   }
+
   matchItem(node) {
     return node.matches(this.listItemSelector);
   }
+
   getChannelName(itemNode) {
     let result = '';
     const link = itemNode.querySelector(this.channelNameLinkSelector);
     if (link) {
-      const m = /\/([^\/]+)/.exec(link.getAttribute('href'));
+      const m = /\/([^\/]+)\/videos$/.exec(link.getAttribute('href'));
       if (m) {
         result = m[1];
       }
     }
     return result;
   }
+
   getGameName(itemNode) {
     let result = '';
     const link = itemNode.querySelector(this.gameNameLinkSelector);
@@ -61,9 +58,11 @@ class TwitchTypeB {
     }
     return result;
   }
+
   isRecord(itemNode) {
     return !!itemNode.querySelector('.stream-type-indicator--rerun');
   }
+
   handleToggleLinkClick(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -71,6 +70,7 @@ class TwitchTypeB {
     const info = JSON.parse(link.dataset.tgrInfo);
     this.inject.toggleInfo(info);
   }
+
   addGameControl(itemNode, gameName, className) {
     if (itemNode.querySelector(`.${className}.tgr__game`)) return;
 
@@ -92,14 +92,10 @@ class TwitchTypeB {
       containerNode.textContent = ' ';
       containerNode.appendChild(controlNode);
 
-      const nextNode = link.nextElementSibling;
-      if (nextNode) {
-        link.parentNode.insertBefore(nextNode, containerNode)
-      } else {
-        link.parentNode.appendChild(containerNode);
-      }
+      putNodeBefore(containerNode, link);
     }
   }
+
   addChannelControl(itemNode, channelName, className) {
     if (itemNode.querySelector(`.${className}.tgr__channel`)) return;
 
@@ -121,17 +117,16 @@ class TwitchTypeB {
       containerNode.textContent = ' ';
       containerNode.appendChild(controlNode);
 
-      const nextNode = link.nextElementSibling;
-      if (nextNode) {
-        link.parentNode.insertBefore(nextNode, containerNode)
-      } else {
-        link.parentNode.appendChild(containerNode);
-      }
+      putNodeBefore(containerNode, link);
     }
-  }
-  static isCurrentType() {
-    return true;
   }
 }
 
-export default TwitchTypeB;
+function putNodeBefore(node, target) {
+  const parent = target.parentNode;
+  if (parent) {
+    parent.insertBefore(node, target);
+  }
+}
+
+export default TwitchAdapter;

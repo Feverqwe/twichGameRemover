@@ -1,6 +1,6 @@
 const {DefinePlugin} = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
@@ -78,10 +78,12 @@ const config = {
         outputPath,
       ]
     }),
-    new CopyWebpackPlugin([
-      {from: './src/manifest.json',},
-      {from: './src/icons', to: './icons'},
-    ]),
+    new CopyWebpackPlugin({
+      patterns: [
+        {from: './src/manifest.json',},
+        {from: './src/icons', to: './icons'},
+      ],
+    }),
     new HtmlWebpackPlugin({
       filename: 'options.html',
       template: './src/options.html',

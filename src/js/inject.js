@@ -1,4 +1,4 @@
-import TwitchTypeB from "./twitchTypeB";
+import TwitchAdapter from "./twitchAdapter";
 import getStyle from "./getStyle";
 import storageGet from "../tools/storageGet";
 import defaultConfig from "./defaultConfig";
@@ -18,23 +18,23 @@ storageGet(defaultConfig, 'sync').then((/**@type {{gameList:string[],channelList
     });
   };
 
-  /**@type {TwitchTypeB}*/
-  const currentTwitchType = new TwitchTypeB({
+  /**@type {TwitchAdapter}*/
+  const twitchAdapter = new TwitchAdapter({
     toggleInfo: toggleInfo
   });
 
   const testElement = (listItemNode) => {
-    const gameName = currentTwitchType.getGameName(listItemNode);
+    const gameName = twitchAdapter.getGameName(listItemNode);
     if (storage.showControls) {
-      currentTwitchType.addGameControl(listItemNode, gameName, 'tgr__toggle');
+      twitchAdapter.addGameControl(listItemNode, gameName, 'tgr__toggle');
     }
 
-    const channelName = currentTwitchType.getChannelName(listItemNode);
+    const channelName = twitchAdapter.getChannelName(listItemNode);
     if (storage.showControls) {
-      currentTwitchType.addChannelControl(listItemNode, channelName, 'tgr__toggle');
+      twitchAdapter.addChannelControl(listItemNode, channelName, 'tgr__toggle');
     }
 
-    const isRecord = currentTwitchType.isRecord(listItemNode);
+    const isRecord = twitchAdapter.isRecord(listItemNode);
 
     let result = false;
     if (
@@ -59,11 +59,11 @@ storageGet(defaultConfig, 'sync').then((/**@type {{gameList:string[],channelList
         display: 'none'
       });
     } else {
-      style.textContent += getStyle('.tgr__hidden ' + currentTwitchType.thumbSelector, {
+      style.textContent += getStyle('.tgr__hidden ' + twitchAdapter.thumbSelector, {
         opacity: .5,
         transition: 'opacity 0.2s'
       });
-      style.textContent += getStyle('.tgr__hidden ' + currentTwitchType.thumbSelector + ':hover', {
+      style.textContent += getStyle('.tgr__hidden ' + twitchAdapter.thumbSelector + ':hover', {
         opacity: 1
       });
     }
@@ -132,7 +132,7 @@ storageGet(defaultConfig, 'sync').then((/**@type {{gameList:string[],channelList
   };
 
   const refresh = () => {
-    onAddedNode(currentTwitchType.getItems(document.body));
+    onAddedNode(twitchAdapter.getItems(document.body));
   };
 
   refreshStyle();
@@ -145,10 +145,10 @@ storageGet(defaultConfig, 'sync').then((/**@type {{gameList:string[],channelList
       while (mutation = mutations.shift()) {
         for (let i = 0; node = mutation.addedNodes[i]; i++) {
           if (node.nodeType === 1) {
-            if (currentTwitchType.matchItem(node)) {
+            if (twitchAdapter.matchItem(node)) {
               nodeList.push(node);
             } else {
-              nodeList.push.apply(nodeList, currentTwitchType.getItems(node));
+              nodeList.push.apply(nodeList, twitchAdapter.getItems(node));
             }
           }
         }
