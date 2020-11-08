@@ -22,9 +22,9 @@ class TwitchAdapter {
     /**@private*/
     this.listItemSelector = '.tw-tower > div';
     /**@private*/
-    this.gameNameLinkSelector = 'a.tw-link[href^="/directory/game/"]';
+    this.gameNameLinkSelector = 'a.tw-link[data-test-selector="GameLink"][data-a-target="preview-card-game-link"]';
     /**@private*/
-    this.channelNameLinkSelector = 'a.tw-link[href$="/videos"]:not([data-test-selector="preview-card-avatar"])';
+    this.channelNameLinkSelector = 'a.tw-link[data-test-selector="ChannelLink"][data-a-target="preview-card-channel-link"]';
     this.thumbSelector = '.preview-card-thumbnail__image';
 
     this.handleToggleLinkClick = this.handleToggleLinkClick.bind(this);
