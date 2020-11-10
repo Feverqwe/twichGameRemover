@@ -42,7 +42,7 @@ class TwitchAdapter {
     let result = '';
     const link = itemNode.querySelector(this.channelNameLinkSelector);
     if (link) {
-      const m = /\/([^\/]+)\/videos$/.exec(link.getAttribute('href'));
+      const m = /\/([^\/]+)/.exec(link.getAttribute('href'));
       if (m) {
         result = m[1];
       }
